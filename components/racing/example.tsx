@@ -1,0 +1,10 @@
+'use client';
+import { useState } from 'react';
+import { examples } from '@/lib/catalog';
+import { Modal } from './modal';
+type ExampleSource={label:string;prompt?:string;exampleIds?:string[];exampleStatus?:string;exampleNote?:string;unit?:string};
+export function ExampleButton({field,column}:{field:ExampleSource;column?:ExampleSource}){
+ const [missing,setMissing]=useState<Set<string>>(new Set());const [open,setOpen]=useState(false);const [zoom,setZoom]=useState(false);const source=column||field;const ids=source.exampleIds?.length?source.exampleIds:field.exampleIds||[];
+ const matched=examples.filter(e=>ids.includes(e.id));
+ return <><button type="button" className="example-button" onClick={()=>setOpen(true)}><span aria-hidden="true">⊕</span> דוגמה והסבר</button>{open&&<Modal wide title={`דוגמה והסבר · ${source.label}`} onClose={()=>setOpen(false)}><p className="lead-copy">{source.prompt||field.prompt}</p>{source.unit&&<p>יחידה נדרשת: <bdi>{source.unit}</bdi></p>}<div className="notice">הדוגמה מסבירה את צורת התיעוד. התשובה שלכם צריכה להתבסס על המערכת והראיות של הצוות.</div>{matched.length===0?<div className="example-gap"><h3>דוגמה מתאימה עדיין חסרה</h3><p>{source.exampleNote||field.exampleNote||'אפשר להמשיך למלא לפי ההסבר. החוסר בדוגמה מופיע גם ברשימת ההשלמות של הרכז.'}</p></div>:matched.map(example=><figure key={example.id} className="example-figure"><h3>{example.title}</h3>{missing.has(example.id)?<p className="notice">התמונה זמינה בחבילת המקורות הפרטית של הקבוצה. ההסבר זמין כאן.</p>:<button className={`image-zoom ${zoom?'zoomed':''}`} onClick={()=>setZoom(!zoom)} aria-label={zoom?'הקטנת התמונה':'הגדלת התמונה'}><img src={`/api/examples/${encodeURIComponent(example.id)}`} alt={example.caption||example.title} onError={()=>setMissing(previous=>new Set([...previous,example.id]))}/></button>}<figcaption>{example.caption}</figcaption><p>{example.explanation}</p>{example.limitations&&<p className="muted">{Array.isArray(example.limitations)?example.limitations.join(' · '):String(example.limitations)}</p>}</figure>)}</Modal>}</>;
+}

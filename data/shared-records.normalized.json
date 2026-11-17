@@ -1,0 +1,93 @@
+[
+  {
+    "id": "actual_max_ts_voltage",
+    "label": "מתח מרבי בפועל של מערכת ההנעה",
+    "unit": "V",
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "nominal_ts_voltage",
+    "label": "מתח נומינלי של מערכת ההנעה",
+    "unit": "V",
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "segment_configuration",
+    "label": "תצורת סגמנטים בסוללה",
+    "unit": null,
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "lv_nominal_voltage",
+    "label": "מתח נומינלי של מתח נמוך",
+    "unit": "V",
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "vehicle_mass",
+    "label": "מסת הרכב",
+    "unit": "kg",
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "tsac_mass",
+    "label": "מסת מארז הסוללה",
+    "unit": "kg",
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  },
+  {
+    "id": "competition_template_version",
+    "label": "גרסת טופס ההגשה",
+    "unit": null,
+    "entityType": "vehicle_parameter",
+    "requiredMetadata": [
+      "source",
+      "unit",
+      "version",
+      "ownerDepartment"
+    ],
+    "conflictPolicy": "preserve_both_candidates_until_coordinator_resolution"
+  }
+]

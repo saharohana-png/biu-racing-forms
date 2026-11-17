@@ -1,0 +1,60 @@
+{
+  "checkedDate": "2026-11-17",
+  "departmentEvidence": {
+    "label": "ענף מכאניקה",
+    "cell": "A75",
+    "sheet": "גיליון1"
+  },
+  "teams": [
+    {
+      "id": "MECH_DRIVETRAIN",
+      "label": "צוות הנעה",
+      "sourceCell": "A78",
+      "department": "MECHANICS",
+      "existenceStatus": "verified_live_drive",
+      "sourceSheet": "גיליון1",
+      "sourceModifiedDate": "2026-11-15",
+      "sesAssignmentStatus": "proposed_not_verified"
+    },
+    {
+      "id": "MECH_DYNAMICS",
+      "label": "צוות דינמיקת רכב ומתלים",
+      "sourceCell": "A84",
+      "department": "MECHANICS",
+      "existenceStatus": "verified_live_drive",
+      "sourceSheet": "גיליון1",
+      "sourceModifiedDate": "2026-11-15",
+      "sesAssignmentStatus": "proposed_not_verified"
+    },
+    {
+      "id": "MECH_CHASSIS",
+      "label": "צוות שלדה ומעטפת",
+      "sourceCell": "A92",
+      "department": "MECHANICS",
+      "existenceStatus": "verified_live_drive",
+      "sourceSheet": "גיליון1",
+      "sourceModifiedDate": "2026-11-15",
+      "sesAssignmentStatus": "proposed_not_verified"
+    },
+    {
+      "id": "MECH_ENCLOSURES",
+      "label": "צוות מארזים ומערכות קירור",
+      "sourceCell": "A99",
+      "department": "MECHANICS",
+      "existenceStatus": "verified_live_drive",
+      "sourceSheet": "גיליון1",
+      "sourceModifiedDate": "2026-11-15",
+      "sesAssignmentStatus": "proposed_not_verified"
+    }
+  ],
+  "discordObservedByParent": {
+    "status": "parent_reported_observation",
+    "channels": [
+      "02-00-mechanics",
+      "02-01-drivetrain",
+      "02-02-vehicle-dynamics-and-suspension"
+    ]
+  },
+  "ownershipPolicy": "All SES routing below is proposed, not an observed task assignment. No names or contact details are seeded.",
+  "privateSourceNote": "Team structure was checked against the private team roster. Contact-sheet URL and personal contact data are deliberately excluded from public source."
+}

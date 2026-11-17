@@ -1,0 +1,3 @@
+import {guard,getFileRecord,fileBytes} from '@/lib/server';
+export const dynamic='force-dynamic';
+export async function GET(request:Request,context:{params:Promise<{id:string}>}){return guard(request,async()=>{const id=(await context.params).id,file=await getFileRecord(id),object=await fileBytes(id);return new Response(object.body,{headers:{'Content-Type':file.mime,'Content-Length':String(file.size),'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(file.safeName)}`,'X-Content-Type-Options':'nosniff','Cache-Control':'private, no-store','Content-Security-Policy':"default-src 'none'; sandbox"}});});}

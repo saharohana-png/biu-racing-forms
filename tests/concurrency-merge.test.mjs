@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {mergeAnswers,answerContent} from '../lib/answer-merge.ts';
+const a=value=>({status:'answered',value});
+const base={a:a('A0'),b:a('B0')};
+const sources=[{title:'מקור',url:'https://drive.google.com/file/d/original/view',kind:'drive',applicability:'current'}];
+let n=0;function test(name,fn){fn();n++;}
+test('disjoint changes',()=>assert.deepEqual(mergeAnswers(base,{...base,a:a('A1')},{...base,b:a('B1')}).answers,{a:a('A1'),b:a('B1')}));
+test('same field divergence',()=>assert.deepEqual(mergeAnswers(base,{...base,a:a('A1')},{...base,a:a('A2')}).conflictFieldIds,['a']));
+test('same final content converges',()=>assert.deepEqual(mergeAnswers(base,{...base,a:a('A1')},{...base,a:a('A1')}).conflictFieldIds,[]));
+test('server-only new field retained',()=>assert.equal(mergeAnswers(base,{...base,new:a('new')},base).answers.new.value,'new'));
+test('omitted field retained',()=>assert.equal(mergeAnswers(base,base,{b:a('B1')}).answers.a.value,'A0'));
+test('explicit blank clears text',()=>assert.equal(mergeAnswers(base,base,{...base,a:a('')}).answers.a.value,''));
+test('table changed by both remains conflict',()=>{const row={status:'answered',value:[{_id:'one',x:'1',y:'2'}]};assert.deepEqual(mergeAnswers({t:row},{t:{...row,value:[{_id:'one',x:'3',y:'2'}]}},{t:{...row,value:[{_id:'one',x:'1',y:'4'}]}}).conflictFieldIds,['t'])});
+test('metadata confirmation does not conflict or reset',()=>{const source={...a('A'),provenance:sources,sourceReview:'pending'};assert.equal(mergeAnswers({a:source},{a:{...source,sourceReview:'confirmed'}},{a:source}).answers.a.sourceReview,'confirmed')});
+test('content edit retains sources and resets pending',()=>{const source={...a('A'),provenance:sources,sourceReview:'confirmed',importedBatchId:'original_batch'};const changed=mergeAnswers({a:source},{a:source},{a:{...a('B'),provenance:[{...sources[0],title:'Changed source'}],importedBatchId:'wrong_batch'}}).answers.a;assert.deepEqual(changed.provenance,sources);assert.equal(changed.importedBatchId,'original_batch');assert.equal(changed.sourceReview,'pending')});
+test('source without batch never manufactures null metadata',()=>{const source={...a('A'),provenance:sources,sourceReview:'pending'};const changed=mergeAnswers({a:source},{a:source},{a:{...a('B'),importedBatchId:'wrong_batch'}}).answers.a;assert.equal(Object.hasOwn(changed,'importedBatchId'),false)});
+test('new uploaded file conflicts with same-field edit',()=>{const source={...a(''),attachmentIds:['old']};const result=mergeAnswers({f:source},{f:{...source,attachmentIds:['old','new']}},{f:{...source,value:'edited'}});assert.deepEqual(result.conflictFieldIds,['f']);assert.deepEqual(result.answers.f.attachmentIds,['old','new'])});
+test('omitted attachment list inherits base',()=>{const source={...a(''),attachmentIds:['old']};assert.deepEqual(mergeAnswers({f:source},{f:source},{f:a('edited')}).answers.f.attachmentIds,['old'])});
+test('explicit attachment unlink allowed',()=>{const source={...a(''),attachmentIds:['old']};assert.deepEqual(mergeAnswers({f:source},{f:source},{f:{...source,attachmentIds:[]}}).answers.f.attachmentIds,[])});
+test('attachment reordering is not a content edit',()=>assert.deepEqual(answerContent({...a(''),attachmentIds:['b','a','a']}),answerContent({...a(''),attachmentIds:['a','b']})));
+test('inputs immutable',()=>{const original=structuredClone(base);mergeAnswers(base,{...base,a:a('A1')},{...base,b:a('B1')});assert.deepEqual(base,original)});
+console.log(n+' pure answer-merge cases passed.');

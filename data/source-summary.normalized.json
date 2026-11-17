@@ -1,0 +1,71 @@
+{
+  "title": "BIU Racing | תיק החשמל 2027",
+  "systems": 22,
+  "formalFields": 725,
+  "supplementalControls": 164,
+  "exampleImages": 41,
+  "exampleGaps": 441,
+  "supplementalExampleGaps": 70,
+  "rulesEdition": "Formula Student Rules 2027 v1.0",
+  "engineeringYear": 2027,
+  "event": "Italy",
+  "templateVersions": {
+    "ESF": "FEI2023 Ver01",
+    "ASES": "FS26 v1.0",
+    "SES": "FS26 v1.3"
+  },
+  "italy2027SubmissionVerified": false,
+  "sourceCheckedAt": "2026-10-30",
+  "sourceManifest": {
+    "checked": "2026-10-30",
+    "italy_2027_submission_template_verified": false,
+    "sources": [
+      {
+        "filename": "FS_Rules_2027_v1.0.pdf",
+        "url": "https://www.formulastudent.de/fileadmin/user_upload/all/2027/rules/FS_Rules_2027_v1.0.pdf",
+        "status": "engineering_rules_2027",
+        "sha256": "2951cf32a19516bcbb55c60699acf64b86111779032f0966044e544e3324662b"
+      },
+      {
+        "filename": "Italy_Official_FS26_ASES_v1.0.xlsm",
+        "url": "https://docs.formula-ata.it/sites/default/files/templates/FS26_ASES_v1.0.xlsm",
+        "status": "historical_template_2026",
+        "sha256": "974ff66fe2ec18fcd4c39fed114f2978891de1cf0571298a36aaedfc1c85226a"
+      },
+      {
+        "filename": "Italy_ESF_Template_FEI2023_Ver01_protected_2.xlsx",
+        "url": "https://docs.formula-ata.it/sites/default/files/templates/ESF_Template_FEI2023_Ver01_protected_2.xlsx",
+        "status": "historical_template_2023",
+        "sha256": "b4bce75bbae504f76e13a23638d44cf277ef15d1b529cb8333de49b65d157c08"
+      }
+    ]
+  },
+  "exampleSummary": {
+    "formal_leaf_controls": 725,
+    "formal_leaf_statuses": {
+      "example_gap": 441,
+      "relevant_real_example": 65,
+      "partial_real_example": 215,
+      "withheld_private_contact_example": 4
+    },
+    "supplemental_controls": 164,
+    "supplemental_statuses": {
+      "relevant_real_example": 11,
+      "withheld_private_contact_example": 1,
+      "example_gap": 70,
+      "partial_real_example": 82
+    },
+    "source_images": 41,
+    "official_exact_field_screenshots_verified": 0,
+    "complete_example_coverage": false
+  },
+  "routingNote": "נתוני ההקצאה הם הצעת איסוף; בעלות מאומתת נשמרת בנפרד. אין שמות אנשים בממשק.",
+  "contactFieldIds": [
+    "LC-ASES-S04-D16",
+    "LC-ASES-S04-N16",
+    "LC-ASES-S04-D17",
+    "LC-ASES-S04-N17",
+    "SC-EP-C01-F02"
+  ],
+  "mechanicalFields": 68
+}

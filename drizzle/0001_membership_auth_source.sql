@@ -1,0 +1,1 @@
+ALTER TABLE `memberships` ADD `auth_source` text DEFAULT 'manual' NOT NULL;

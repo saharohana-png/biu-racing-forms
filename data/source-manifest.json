@@ -1,0 +1,30 @@
+{
+  "checked": "2026-10-30",
+  "italy_2027_submission_template_verified": false,
+  "sources": [
+    {
+      "filename": "FS_Rules_2027_v1.0.pdf",
+      "url": "https://www.formulastudent.de/fileadmin/user_upload/all/2027/rules/FS_Rules_2027_v1.0.pdf",
+      "status": "engineering_rules_2027",
+      "sha256": "2951cf32a19516bcbb55c60699acf64b86111779032f0966044e544e3324662b"
+    },
+    {
+      "filename": "Italy_Official_FS26_ASES_v1.0.xlsm",
+      "url": "https://docs.formula-ata.it/sites/default/files/templates/FS26_ASES_v1.0.xlsm",
+      "status": "historical_template_2026",
+      "sha256": "974ff66fe2ec18fcd4c39fed114f2978891de1cf0571298a36aaedfc1c85226a"
+    },
+    {
+      "filename": "Italy_ESF_Template_FEI2023_Ver01_protected_2.xlsx",
+      "url": "https://docs.formula-ata.it/sites/default/files/templates/ESF_Template_FEI2023_Ver01_protected_2.xlsx",
+      "status": "historical_template_2023",
+      "sha256": "b4bce75bbae504f76e13a23638d44cf277ef15d1b529cb8333de49b65d157c08"
+    },
+    {
+      "filename": "FS26_SES_v1.3.xlsx",
+      "url": "https://docs.formula-ata.it/sites/default/files/templates/FS26_SES_v1.3.xlsx",
+      "status": "historical_template_2026",
+      "sha256": "f08c130f4261c5eda7fd96613646adc24e26d94072dd13dc5a86bf431304995e"
+    }
+  ]
+}
