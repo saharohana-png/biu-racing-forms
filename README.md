@@ -1,48 +1,54 @@
-# BIU Racing Forms
+<div dir="rtl">
 
-תיעוד קבוצתי בעברית ובאנגלית לעונת 2027: 21 מערכות חשמל, טופס רכז, וטופס SES מכני עם ארבע קבוצות עבודה מוצעות. הקוד הוא פרויקט עצמאי ב־Git; ההפעלה והכניסה אינן דורשות ChatGPT.
+# מערכת הטפסים של BIU Racing
 
-## Automatic Hebrew → English
+כאן נמצא קוד האתר לניהול טפסי החשמל והמכניקה של הקבוצה: מילוי בעברית, תרגום אוטומטי לאנגלית, צירוף אסמכתאות וייצוא לטפסים הרשמיים.
 
-Saving a field, including leaving the field, queues translation in a browser Web Worker. The pinned OPUS-MT model runs on the visitor's device. There is **no OpenAI key, paid inference API, AI credit balance or scheduled agent**. Hebrew remains the source; English is saved separately against the exact source revision. Tables, notes and dependencies are included. Identifiers, units, numbers, links and workbook cell addresses are protected.
+**חדש בפרויקט? התחילו בטבלה הבאה.** מדריכי העבודה בעברית; שמות הקבצים והפקודות נשארים באנגלית כדי להתאים לקוד.
 
-The first use downloads about 365 MB of model weights plus runtime files; browser storage normally caches them. A reasonably capable desktop browser, memory and an initial Internet connection are needed. Closing the page stops processing; pending work resumes when the relevant form/document is opened. Translation is an engineering draft, not a correctness or compliance guarantee. See [translation design](docs/translation-runtime.md) and [model attribution](THIRD_PARTY_NOTICES.md).
+| מה רוצים לעשות? | לאן נכנסים? |
+| --- | --- |
+| להבין מה נמצא בכל תיקייה | [מפת הפרויקט והסבר המבנה](docs/architecture.md) |
+| להפעיל את האתר במחשב | [התקנה והפעלה](docs/getting-started.md) |
+| לשנות מסך, שדה, תרגום או ייצוא | [מדריך עריכה לפי משימה](docs/editing-guide.md) |
+| להציע שינוי דרך GitHub | [איך עובדים יחד ומגישים שינוי](CONTRIBUTING.md) |
+| להעלות גרסה לאתר הפעיל | [הקמת האתר ופרסום גרסאות](docs/deployment.md) |
+| להבין איך עובד התרגום | [מנגנון התרגום](docs/translation-runtime.md) |
+| לטפל בתבניות ובנתונים לאורך זמן | [תחזוקה](MAINTENANCE.md) |
 
-## Run locally
+## מה כבר קיים ומה בהקמה?
 
-Node.js 22.13+ and npm are required. Node 22 is used in CI.
+| רכיב | מצב |
+| --- | --- |
+| קוד פתוח לעיון ולהצעת שינויים | נמצא במאגר הזה; הבעלים מחליט אילו שינויים למזג |
+| בדיקות אוטומטיות | פועלות בכל העלאת קוד ובקשת שינוי; [תוצאות הבדיקות](https://github.com/saharohana-png/biu-racing-forms/actions/workflows/ci.yml) |
+| הפעלה מקומית | זמינה לפי מדריך ההתקנה |
+| כתובת האתר העצמאי לשימוש הקבוצה | **בהקמה — עדיין אין כאן קישור לשרת עצמאי שאומת כפעיל** |
+| פרסום אוטומטי לאתר מתוך GitHub | טרם הוגדר; מיזוג קוד לבדו אינו מפרסם גרסה |
+| תשובות וקבצים מהאתר הקיים | אינם חלק מהמאגר; ההעברה שלהם נעשית בנפרד |
 
-```sh
-npm ci
-npm run templates:prepare
-npm run setup:local
-npm run dev
-```
+## מה האתר כולל?
 
-Open http://127.0.0.1:5173. Local development uses an isolated D1 database and a development coordinator identity. It contains no production answers, memberships or uploaded files. Keep the dev listener on loopback; never set `LOCAL_DEV` on a hosted deployment.
+- 21 מערכות חשמל, מסך רכז וטופס SES מכני. שיוך העבודה לארבעת צוותי המכניקה מסומן כהצעה שדורשת אישור.
+- שמירת המקור בעברית ותרגום נפרד לאנגלית לאחר עריכה. התרגום מחושב בדפדפן, ללא מפתח OpenAI וללא מכסת קריאות לשירות תרגום בתשלום.
+- טבלאות, אסמכתאות, היסטוריית גרסאות, בקרת הרשאות וייצוא למסמכים.
 
-```sh
-npm run check
-npm run catalog:check
-npm run build
-```
+בהפעלה הראשונה מנוע התרגום מוריד כ־365 MB של משקלי מודל, נוסף על קובצי ההרצה. הוא משתמש בזיכרון ובמעבד של המחשב; הדפדפן שומר בדרך כלל את הקבצים לשימוש חוזר. האנגלית היא טיוטה לבדיקה הנדסית. [פרטי המנגנון והמגבלות](docs/translation-runtime.md).
 
-The official workbooks are downloaded from the competition's own URLs and checked against pinned SHA-256 values. A changed file fails preparation rather than silently invalidating cell mappings. Private workbook and example-image build inputs are ignored by Git.
+## שלושה דברים שונים
 
-## Collaboration and hosting
+**GitHub** שומר את הקוד והיסטוריית השינויים. **שרת האתר** מריץ את המערכת בכתובת שאליה חברי הקבוצה נכנסים. **מסד הנתונים ואחסון הקבצים** שומרים את התשובות והאסמכתאות. פתיחת הקוד לציבור אינה פותחת את תשובות הקבוצה לציבור.
 
-Fork the repository, create a branch and open a pull request. The owner chooses which contributions to merge and whom to grant direct repository access. Public source code does not make team answers or production storage public. See [CONTRIBUTING.md](CONTRIBUTING.md).
+המערכת מיועדת ל־Cloudflare Workers, למסד D1 ולאחסון R2. עלויות האחסון וההפעלה תלויות בחשבון; היעדר מכסת AI מתייחס לתרגום המקומי. אין משימה תקופתית שסורקת את Discord או Drive ומעדכנת מידע באתר.
 
-This is a full-stack React/Vinext application for Cloudflare Workers, D1 and R2, not a static GitHub Pages site. [Deployment and migration](docs/deployment.md) documents the required account resources, Cloudflare Access configuration and separate transfer of existing private data. The checked-in database ID is a placeholder; cloning or building does not deploy anything. Hosting/storage charges depend on the account plan; the no-quota statement concerns translation inference.
+## באילו תבניות משתמשים?
 
-## Official form versions
+| טופס | גרסת התבנית בקוד |
+| --- | --- |
+| ESF | התבנית האיטלקית FEI2023 |
+| ASES | FS26 v1.0, כולל פקודות המאקרו המקוריות |
+| SES | FS26 v1.3; נשמרים 49 גיליונות, מהם 34 עם טווחי עריכה מוגדרים |
 
-- ESF: Italian FEI2023 template.
-- ASES: FS26 v1.0 macro-enabled template.
-- SES: FS26 v1.3, all 49 sheets preserved, 34 sheets with declared editable ranges.
+התאמת התבניות להגשה באיטליה בעונת 2027 **עדיין לא אומתה**. אלו תבניות עבודה; שינוי גרסה מחייב בדיקת מיפוי התאים והייצוא. חומרי צד שלישי שומרים על הרישיונות שלהם: [ייחוס ורישיונות](THIRD_PARTY_NOTICES.md).
 
-These are working draft templates. Their acceptance for the 2027 Italian event has **not** been verified. The SES editor requests explicit workbook cell addresses and rejects locked/formula/invalid destinations. Original formulas, validation, formatting, images and merged cells are preserved; Excel must recalculate the exported workbook. Attachments remain in the evidence package. Proposed mechanical ownership is marked as proposed, not an assigned task.
-
-## Data and maintenance
-
-Existing saved answers are not included in this repository. No recurring Drive/Discord enrichment or quota polling is enabled. Imports are explicit coordinator actions with previews and revision checks. See [MAINTENANCE.md](MAINTENANCE.md).
+</div>

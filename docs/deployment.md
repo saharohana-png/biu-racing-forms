@@ -1,22 +1,67 @@
-# Standalone deployment and private-data migration
+<div dir="rtl">
 
-The repository is independent source code. It is not itself a hosted form service. It targets Cloudflare Workers with D1 for records and R2 for uploaded evidence. GitHub Pages cannot run the authenticated backend.
+# הקמת האתר ופרסום גרסאות
 
-## Prepare a destination
+[חזרה לעמוד הראשי](../README.md) · [מפת המערכת](architecture.md) · [תחזוקה](../MAINTENANCE.md)
 
-1. In the intended Cloudflare account, create a D1 database and an R2 bucket. Check the built Worker size, CPU use and storage against the current plan limits. As of 18 November 2026, Cloudflare documents a 64 MiB uncompressed Worker bundle limit for both free and paid plans ([size limit change](https://developers.cloudflare.com/changelog/post/2026-09-04-increased-worker-size-limit/)). Inspect the generated bundle with `wrangler deploy --config dist/server/wrangler.json --dry-run`; workbook export must also be checked against the CPU and memory allowance. R2 requires its own subscription, with included free usage and possible usage charges; review the account's billing settings before enabling it. No paid plan is selected by this project.
-2. Copy `wrangler.jsonc` to the ignored `wrangler.production.jsonc`. Replace the placeholder database ID and resource names with the actual resources. Configure an explicit domain/route for the deployment.
-3. Configure Cloudflare Access for the intended audience and domain. Set the configuration vars `ACCESS_TEAM_DOMAIN` (for example `team.cloudflareaccess.com`) and `ACCESS_AUD` to that Access application's values. These are configuration identifiers, not inference credentials. The Worker verifies RS256 signatures, issuer, audience and expiry and rejects direct unauthenticated origin requests. Never set `LOCAL_DEV` in production.
-4. Apply the migrations to the destination with `npx wrangler d1 migrations apply <database-name> --remote --config wrangler.production.jsonc`.
-5. Before inviting users, set the `workspace` row for ID `2027` to the intended owner's verified Access subject, prefixed with `access:`. Obtain the subject from the correct Access identity. Do not promote the first visitor or guess an identifier. A missing owner deliberately blocks access. Subsequent roles are managed by the coordinator in the app.
-6. Install dependencies and prepare official templates, then build with `FORMS_WRANGLER_CONFIG=./wrangler.production.jsonc npm run build` (set that environment variable using the equivalent shell syntax on Windows). Review the generated `dist/server/wrangler.json`. Deploy with `npm run deploy` only after the target resources, access policy and data migration are reviewed.
+המדריך מיועד לאחראי הפרסום. חבר צוות שרוצה לערוך את הקוד יכול להתחיל ב[התקנה המקומית](getting-started.md), בלי להקים שרת.
 
-Use an Access identity provider suitable for your collaborators. The retained self-declared university-email form does not verify mailbox ownership and must remain behind the deployment-wide Access policy. Application roles and system scopes are enforced separately from the perimeter policy.
+**מצב ההקמה:** הקוד נמצא ב־GitHub והבדיקות פועלות. ההקמה העצמאית והעברת נתוני האתר הקיים טרם הושלמו. אין עדיין כתובת עצמאית מאומתת למסירה לקבוצה, ואין פרסום אוטומטי מתוך GitHub.
 
-## Transfer existing private data separately
+## מה GitHub עושה ומה השרת עושה?
 
-The public repository deliberately excludes source answers, membership records, attachments, example photos, environment files and database state. A source-code deployment cannot migrate them.
+GitHub שומר גרסאות קוד ומריץ בדיקות. Cloudflare Workers מריץ את האתר, D1 שומר תשובות והרשאות, ו־R2 שומר קבצים שהועלו. Cloudflare Access מאמת מי רשאי להגיע לאתר; בתוך האתר נבדקות בנפרד הרשאות הרכז, התורם והסוקר.
 
-Before cutover, export the original D1 database and R2 objects using the source hosting account's authorized tools, and preserve an untouched backup. Import into the isolated destination, preserving revision IDs, attachment IDs/keys, provenance and mutation history. Map historical actor identities to the new verified Access identities explicitly; do not overwrite them by matching a self-declared email. Verify record counts, representative Hebrew answers, file downloads, revision history, role boundaries, translation and each official workbook export before pointing collaborators at the new URL.
+היישום כולל שרת ומסד נתונים, ולכן GitHub Pages לבדו אינו מספיק להפעלה שלו.
 
-Do not commit these backups or import them into browser-test fixtures. Keep the existing service available until the destination is tested and the owner chooses the cutover. No production migration or live cutover is performed merely by cloning this repository.
+## הקמה ראשונית
+
+1. **משאבים:** יוצרים בחשבון המיועד מסד D1 ואחסון R2. בודקים את מגבלות החשבון ואת תנאי החיוב לפני הפעלת שירות. הפרויקט אינו בוחר מסלול בתשלום.
+2. **תצורה:** מעתיקים את [wrangler.jsonc](../wrangler.jsonc) לקובץ מקומי בשם `wrangler.production.jsonc`, שמוחרג מ־Git. מחליפים את מזהה המסד הזמני ושמות המשאבים בערכים האמיתיים ומגדירים כתובת הפעלה.
+3. **כניסה:** מגדירים ב־Cloudflare Access את הכתובת ואת קהל המשתמשים המותר. מוסיפים לתצורת השרת את `ACCESS_TEAM_DOMAIN` ואת `ACCESS_AUD` של אותה אפליקציה. השרת בודק חתימת RS256, מנפיק, קהל יעד ותוקף. אין להגדיר `LOCAL_DEV` בשרת הפעיל.
+4. **מבנה המסד:** מחילים את המיגרציות על מסד היעד. בפקודה הבאה מחליפים את `DATABASE_NAME` בשם המסד שנוצר.
+5. **בעלים:** מגדירים את `owner_subject` בשורת `workspace` שמזההּ `2027`, לפי מזהה Access המאומת של הבעלים, עם הקידומת `access:`. אין לנחש מזהה או להפוך את המבקר הראשון לבעלים. ללא בעלים מוגדר המערכת חוסמת גישה.
+6. **בנייה ופרסום:** מתקינים תלויות, מכינים תבניות ובונים עם תצורת השרת. בודקים את הקובץ שנוצר ב־`dist/server/wrangler.json` ואת גודל החבילה לפני פרסום.
+7. **בדיקת קבלה:** בודקים כניסה, שמירה ורענון, הרשאות, העלאה והורדה של קובץ, תרגום וייצוא מכל סוג טופס. רק לאחר מכן מעדכנים את כתובת האתר ב־README ומוסרים אותה לקבוצה.
+
+</div>
+
+```sh
+npx wrangler d1 migrations apply DATABASE_NAME --remote --config wrangler.production.jsonc
+```
+
+```sh
+npm ci
+npm run templates:prepare
+FORMS_WRANGLER_CONFIG=./wrangler.production.jsonc npm run build
+npx wrangler deploy --config dist/server/wrangler.json --dry-run
+npm run deploy
+```
+
+<div dir="rtl">
+
+הגדרת משתנה הסביבה בדוגמה מתאימה למסוף macOS/Linux; ב־Windows משתמשים בתחביר המקביל. פקודת `deploy` מפרסמת לשרת. יש להריץ אותה אחרי בדיקת המשאבים, מדיניות הגישה והנתונים.
+
+טופס הדוא״ל האוניברסיטאי שנשמר בממשק הוא הצהרה עצמית; הוא אינו מאמת בעלות על תיבת הדוא״ל, ולכן חייב להישאר מאחורי מדיניות Access. גם אחרי הכניסה, תפקידי היישום נבדקים בנפרד.
+
+## מגבלות ועלויות שיש לבדוק בחשבון
+
+נכון לבדיקת המקור הרשמי ב־18 בנובמבר 2026, מגבלת גודל Worker היא 64 MiB לפני דחיסה במסלול החינמי ובמסלול בתשלום. [הודעת Cloudflare על שינוי המגבלה](https://developers.cloudflare.com/changelog/post/2026-09-04-increased-worker-size-limit/).
+
+יש לבדוק גם זמן מעבד וזיכרון, במיוחד בייצוא חוברות Excel. ל־R2 יש הפעלת שירות נפרדת, שימוש כלול ומחיובים אפשריים לפי שימוש. [הוראות ההתחלה הרשמיות ל־R2](https://developers.cloudflare.com/r2/get-started/). היעדר מכסת AI לתרגום אינו הבטחה שכל האחסון וההפעלה חינם.
+
+## העברת הנתונים מהאתר הקיים
+
+המאגר אינו מכיל תשובות, משתמשים, אסמכתאות וקובצי סביבה מהאתר הקיים. פרסום קוד בלבד לא מעביר אותם.
+
+מייצאים את מסד D1 ואת קובצי R2 דרך הכלים המורשים של חשבון המקור, ושומרים גיבוי ללא שינוי. מייבאים לסביבת היעד תוך שמירת מזהי גרסאות, קבצים, אסמכתאות והיסטוריה. מקשרים זהויות ישנות לזהויות Access מאומתות במפורש; אין להחליף זהויות על סמך דוא״ל בהצהרה עצמית.
+
+לפני מעבר בודקים ספירת רשומות, תשובות בעברית, הורדת קבצים, היסטוריה, הרשאות, תרגום וכל ייצוא רשמי. משאירים את השירות הקיים זמין עד שהיעד נבדק. הגיבויים אינם נכנסים ל־Git או לנתוני בדיקה ציבוריים.
+
+## עדכון האתר לאחר ההקמה
+
+מפתחים שינוי בענף, מגישים PR, משלימים בדיקות וסקירה וממזגים ל־main. אחראי הפרסום בונה את הגרסה שאושרה ומפרסם אותה עם תצורת השרת הנכונה. אם יש מיגרציה, מגבים ומתכננים אותה כחלק מהפרסום. לאחר הפרסום בודקים שוב את המסלולים שהשתנו.
+
+תהליך GitHub הנוכחי ב־[ci.yml](../.github/workflows/ci.yml) מריץ בדיקות ובנייה בלבד. חיבור פרסום אוטומטי יתווסף בנפרד לאחר שהשרת וההרשאות הוגדרו ואומתו.
+
+</div>

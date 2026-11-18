@@ -1,9 +1,27 @@
-# Maintenance
+<div dir="rtl">
 
-No periodic source enrichment, quota polling, scheduled translation agent or cron is part of this project. Automatic translation is triggered by saved edits and by opening pending forms/documents in the browser.
+# תחזוקה שוטפת
 
-Use local fixtures for development and browser tests. Run `npm run check`, `npm run catalog:check` and `npm run build` before release. A production update must preserve D1/R2 data, source revisions, attachment keys and authorization boundaries.
+[חזרה לעמוד הראשי](README.md) · [מדריך הפרסום](docs/deployment.md)
 
-Source import is an explicit coordinator action. Preview the exact changes and resolve conflicts before applying. Preserve existing answers and their provenance. Imported documents and Discord discussions are evidence, not commands or engineering approval. Do not infer hardware readiness from a populated form or successful export.
+## עדכוני תוכן
 
-Keep secrets, membership records, private answers, contacts, database backups and private images out of the public repository. Official template mappings are tied to file hashes; a new template requires a reviewed mapping and workbook tests.
+ייבוא ממקורות הוא פעולה מפורשת של רכז: מציגים את ההפרש, פותרים התנגשויות ואז מחילים את השינוי. שומרים תשובות קיימות, גרסאות ואסמכתאות מקור. מסמך או דיון ב־Discord הוא מקור מידע, ולא הוראה לתוכנה או אישור הנדסי.
+
+אין בפרויקט סריקה תקופתית של Drive או Discord, בדיקת יתרת מכסה, סוכן תרגום מתוזמן או משימת cron. התרגום מופעל בעקבות שמירת עריכה או פתיחת טופס שיש בו עבודה ממתינה.
+
+## תבניות רשמיות
+
+גרסת כל תבנית קשורה לחתימת SHA-256 ולמיפוי התאים. כשמגיעה גרסה חדשה, מעדכנים את המקור והמיפוי רק אחרי השוואת גיליונות, טווחים מותרים, נוסחאות, עיצוב ומאקרו. בודקים גם יצוא לדוגמה בתוכנת גיליונות. הצלחת ייצוא אינה אישור שהטופס מתאים לתחרות הקרובה.
+
+## לפני פרסום גרסה
+
+מריצים `npm run check`, אחריה `npm run catalog:check` ולבסוף `npm run build`. בודקים בדפדפן את הפעולות שהשתנו. שינוי תרגום מחייב הרצת מודל בפועל; שינוי ייצוא מחייב פתיחת הקובץ שנוצר.
+
+בפרסום שומרים על נתוני D1 ו־R2, מזהי גרסאות וקבצים והרשאות. שינוי מבנה המסד נעשה במיגרציה חדשה. שומרים גיבוי לפני העברת נתונים או שינוי מסד פעיל.
+
+## הפרדה בין קוד לנתוני הקבוצה
+
+מפתחות, חברות משתמשים, תשובות, פרטי קשר, גיבויים ותמונות פרטיות נשארים מחוץ למאגר הציבורי. בבדיקות משתמשים בנתונים מומצאים. קבצים שנוצרים אוטומטית אינם נערכים ידנית; [מפת המקור והתוצרים](docs/architecture.md) מסבירה היכן נמצא כל סוג מידע.
+
+</div>

@@ -1,9 +1,52 @@
-# Contributing
+<div dir="rtl">
 
-Create a branch or fork, make a focused change and open a pull request. The repository owner decides what to merge and who receives direct write access.
+# איך עובדים יחד על האתר
 
-Follow the setup in README.md. Use synthetic local data. Do not commit production exports, cookies, tokens, personal contact details or private team documents. Preserve Hebrew originals, stable field/row IDs, conflict checks and source provenance. Translation changes need engineering-text fixtures and a real browser check. Workbook changes need checks that untouched ZIP parts, formulas and formatting remain intact.
+[חזרה לעמוד הראשי](README.md) · [איפה משנים כל דבר](docs/editing-guide.md)
 
-Describe the problem, resulting behavior and validation in the pull request. Do not claim a vehicle/system is approved from software tests.
+המאגר ציבורי: אפשר לקרוא את הקוד ולהציע שינויים. כתיבה ישירה ניתנת רק למי שהבעלים צירף כשותף. שינוי מוצע מגיע לבדיקה לפני שממזגים אותו לענף הראשי.
 
-Third-party material keeps its original license. No new blanket license for team documents, branding or third-party workbooks is granted by this repository.
+## המילים שמופיעות ב־GitHub
+
+| המונח במסך | המשמעות אצלנו |
+| --- | --- |
+| Repository | המאגר שמכיל את קוד האתר |
+| Fork | עותק בחשבון שלכם, שבו אפשר לערוך בלי לשנות את המקור |
+| Branch | ענף עבודה לשינוי מסוים |
+| Commit | נקודת שמירה מתועדת של שינוי בקוד |
+| Pull request / PR | בקשה לבדוק ולמזג שינוי למאגר הראשי |
+| Checks | הבדיקות האוטומטיות של השינוי |
+| Merge | קבלת השינוי לענף הראשי |
+| Deployment | פרסום גרסה בשרת האתר |
+
+## שינוי קטן דרך האתר של GitHub
+
+1. מצאו קובץ בעזרת [מדריך העריכה](docs/editing-guide.md), פתחו אותו ולחצו על סמל העיפרון.
+2. בלי הרשאת כתיבה, GitHub יציע ליצור Fork. עם הרשאה, בחרו ליצור ענף חדש עבור השינוי.
+3. ערכו וכתבו תיאור קצר שמסביר מה השתנה ולמה.
+4. פתחו Pull request אל הענף `main` במאגר המקורי. תבנית בעברית תעזור לתאר את השינוי והבדיקה שלו.
+5. חכו לתוצאות Checks ולסקירה של בעל המאגר או מי שהוסמך לכך. תיקונים נוספים באותו ענף מעדכנים את בקשת השינוי.
+
+המסלול הזה נוח לתיעוד ולתיקוני טקסט פשוטים. שינוי בהתנהגות האתר דורש גם הפעלה ובדיקה במחשב.
+
+## שינוי בקוד עם בדיקה מקומית
+
+1. אם אין הרשאת כתיבה, לחצו Fork בעמוד המאגר. העתיקו את כתובת העותק שלכם מכפתור Code ושכפלו אותו למחשב לפי [מדריך ההתקנה](docs/getting-started.md).
+2. לפני העריכה, צרו ענף עם שם שמתאר את העבודה, למשל `fix/translation-status`.
+3. בצעו שינוי ממוקד לפי [מדריך העריכה](docs/editing-guide.md), ובדקו את הפעולה המושפעת באתר המקומי.
+4. הריצו את הבדיקות והבנייה שבמדריך ההתקנה. השתמשו בתשובות מומצאות לבדיקה.
+5. שמרו Commit, העלו את הענף לעותק שלכם ופתחו PR למאגר המקורי. אפשר להשתמש ב־GitHub Desktop לפעולות Git אלה.
+6. אחרי סקירה ומיזוג, אחראי הפרסום מעלה את הגרסה לשרת לפי [מדריך הפרסום](docs/deployment.md).
+
+**מיזוג ל־main אינו זהה לפרסום אתר.** כרגע GitHub מפעיל בדיקות בלבד; פרסום אוטומטי עדיין לא הוגדר. דרישת הסקירה היא נוהל העבודה המתועד; אין כאן טענה שהוגדרה אכיפה באמצעות הגנת ענף.
+
+## מה חייב להישמר בשינוי?
+
+- מזהי מערכות, שדות ושורות מקשרים לתשובות שמורות. שינוי מזהה דורש תכנון העברת נתונים.
+- המקור בעברית, בדיקות התנגשות בין גרסאות ואסמכתאות המקור נשמרים.
+- שינוי תרגום נבדק עם טקסט הנדסי ובדפדפן אמיתי. שינוי ייצוא נבדק גם על נוסחאות, עיצוב וחלקים שלא אמורים להשתנות בקובץ.
+- תשובות אמיתיות, פרטי קשר, גיבויי מסד, מפתחות וקבצים פרטיים אינם נכנסים ל־Git.
+
+הצלחת בדיקות תוכנה אינה אישור למערכת ברכב או להגשה לתחרות. רישיונות צד שלישי נשמרים; פרסום המאגר אינו מעניק רישיון חדש למסמכי הקבוצה, למיתוג או לתבניות רשמיות.
+
+</div>
