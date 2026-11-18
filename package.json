@@ -9,6 +9,8 @@
     "install:ci": "npm ci --include=dev --include=optional --no-audit --no-fund",
     "dev": "vite",
     "build": "vite build",
+    "build:production": "node scripts/build-production.mjs",
+    "db:migrate:production": "wrangler d1 migrations apply DB --remote --config wrangler.production.jsonc",
     "start": "wrangler dev --config dist/server/wrangler.json --local --ip 127.0.0.1",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
