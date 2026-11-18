@@ -4,7 +4,7 @@
 
 [חזרה לעמוד הראשי](../README.md) · [עריכה לפי משימה](editing-guide.md)
 
-האתר מורכב מממשק בדפדפן, שרת ששומר ובודק הרשאות, מסד תשובות ואחסון קבצים. React מצייר את המסכים; Vinext ו־Vite בונים את האפליקציה להרצה ב־Cloudflare Workers. מבנה הנתיבים תואם למוסכמות Next.js.
+האתר מורכב מממשק בדפדפן, שרת ששומר ובודק הרשאות, מסד תשובות ואחסון קבצים. React מצייר את המסכים ו־Next.js מפעיל את השרת ב־Vercel. פונקציית שרת מוגנת ב־Supabase מחברת למסד PostgreSQL ולאחסון הקבצים. Vite משמש לבניית רכיב התרגום המקומי בלבד.
 
 ## איפה נמצא כל חלק?
 
@@ -15,11 +15,12 @@
 | [components/ui](../components/ui) | רכיבי ממשק משותפים | שינוי רכיב שמשמש בכמה מסכים |
 | [lib](../lib) | שמירה, הרשאות, תרגום, ייבוא וייצוא | שינוי התנהגות המערכת |
 | [data](../data) | הגדרות טפסים, מיפויי תאים ומקורות | שינוי מבנה שאלה או תבנית; אין כאן תשובות משתמשים |
-| [db](../db) | הגדרת טבלאות המסד בקוד וחיבור Drizzle | שינוי סכימת הנתונים לצד מיגרציה מתאימה |
+| [db](../db) | הגדרת SQLite היסטורית לצורכי תאימות | אין זה החיבור למסד הענן הפעיל |
 | [hooks](../hooks) | התנהגות ממשק משותפת, כגון זיהוי מסך צר | התאמת התצוגה למכשיר |
 | [vendor](../vendor) | קובצי צד שלישי ורישיונותיהם | תחזוקת רכיבים שסופקו עם הפרויקט |
-| [drizzle](../drizzle) | מיגרציות: שינויים מתועדים במבנה המסד | הוספת טבלה או עמודה |
-| [worker](../worker) | הכניסה לשרת ואימות גישה | טיפול באבטחה ובהרצה |
+| [drizzle](../drizzle) | סכימת SQLite היסטורית שמשמשת גם בדיקות | בדיקות תאימות; סכימת הענן נמצאת ב־supabase/migrations |
+| [supabase](../supabase) | מבנה המסד ופונקציית האחסון | שינוי אחסון משותף והרשאות שרת |
+| [worker](../worker) | תצורת Cloudflare היסטורית | שחזור גרסה ישנה בלבד |
 | [public](../public) | קבצים סטטיים כמו לוגו | עדכון נכס ציבורי |
 | [scripts](../scripts) | הכנת תבניות, קטלוג וסביבת פיתוח | תחזוקת פקודות ההכנה; הפקודות הנתמכות מוגדרות ב־package.json |
 | [tests](../tests) | בדיקות התנהגות ונתונים | אימות שמירה, הרשאות, תרגום או ייצוא |
@@ -36,11 +37,11 @@
 ```mermaid
 flowchart LR
   Editor[Form editor] -->|Save Hebrew| API[Authenticated API]
-  API --> D1[(D1: answers and revisions)]
+  API --> D1[(PostgreSQL: answers and revisions)]
   API -->|Current translation plan| Browser[Browser translation worker]
   Browser -->|English with source revision| API
   Editor -->|Upload evidence| API
-  API --> R2[(R2: attachments)]
+  API --> R2[(Supabase Storage: attachments)]
 ```
 
 <div dir="rtl">
@@ -53,8 +54,8 @@ flowchart LR
 | תוצר קטלוג אוטומטי | `data/systems.overview.json` | יוצרים עם `npm run catalog:generate`; שומרים גם אותו ב־Git |
 | קובצי בנייה | `dist`, `public/translation` | נוצרים בבנייה; אינם נשמרים ב־Git |
 | תבניות שהורדו | `private-data/official-workbook-templates.json` | נוצרות עם `npm run templates:prepare`; המקור והחתימה מתועדים ב־data |
-| תשובות, משתמשים והיסטוריה | מסד D1 | מנוהלים באתר; אינם קובצי קוד |
-| קבצים שהקבוצה העלתה | אחסון R2 | מועברים ומגובים בנפרד מהמאגר |
+| תשובות, משתמשים והיסטוריה | PostgreSQL פרטי ב־Supabase | מנוהלים באתר; אינם קובצי קוד |
+| קבצים שהקבוצה העלתה | Supabase Storage פרטי | מועברים ומגובים בנפרד מהמאגר |
 
 ## קובצי תצורה בשורש
 
@@ -62,11 +63,13 @@ flowchart LR
 | --- | --- |
 | [package.json](../package.json) | פקודות ההפעלה ורשימת החבילות |
 | [package-lock.json](../package-lock.json) | גרסאות התקנה מדויקות; מתעדכן עם שינוי תלויות |
-| [vite.config.ts](../vite.config.ts) | בניית האתר ושרת הפיתוח |
+| [next.config.ts](../next.config.ts) | הגדרות שרת Next.js |
+| [vercel.json](../vercel.json) | פקודות ההתקנה והבנייה לפרסום |
+| [vite.config.ts](../vite.config.ts) | תצורת Cloudflare היסטורית, שאינה מופעלת בבנייה הנוכחית |
 | [vite.translation.config.ts](../vite.translation.config.ts) | בניית מנוע התרגום לדפדפן |
-| [wrangler.jsonc](../wrangler.jsonc) | שמות משאבי Cloudflare; מזהה המסד במאגר הוא מציין מקום |
+| [wrangler.jsonc](../wrangler.jsonc) | משאבי Cloudflare היסטוריים; אינם נדרשים לפריסה הנוכחית |
 | [.gitignore](../.gitignore) | מה נשאר במחשב ולא נכנס למאגר |
 
-שם היסטורי אחד עדיין קיים: `app/chatgpt-auth.ts`. הוא מספק כיום אימות Cloudflare Access או זהות פיתוח מקומית. שם הקובץ אינו תלות בחשבון ChatGPT; אימות הבקשות נעשה ב־`worker/index.ts` וב־`lib/access-identity.ts`.
+שם היסטורי אחד עדיין קיים: `app/chatgpt-auth.ts`. הוא קורא כיום את עוגיית הרכז שנחתמת ב־`lib/owner-session.ts`; אין תלות בחשבון ChatGPT. כניסת הצוות נבדקת ב־`lib/team-entry.ts`, והחיבור לנתונים ב־`lib/cloud-storage.ts`. קבצי Cloudflare נשמרו לצורך שחזור היסטורי בלבד.
 
 </div>

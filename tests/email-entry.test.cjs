@@ -13,9 +13,10 @@ function fixture(t){
  function load(file){
   if(modules.has(file))return modules.get(file);const exports={};modules.set(file,exports);
   const imports=name=>{
-   if(name==='cloudflare:workers')return {env:{DB:db}};
+   if(name==='@/lib/team-entry')return {teamEntryAllowed:()=>true};if(name==='@/lib/cloud-storage')return {cloudDatabase:db};
    if(name==='next/server')return {after(){}};
-   if(name==='next/headers')return {headers:async()=>new Headers(context.getStore()?.headers??{})};
+   if(name==='@/lib/owner-session')return {OWNER_COOKIE:'biu_owner_session'};
+   if(name==='next/headers')return {cookies:async()=>({delete(){}}),headers:async()=>new Headers(context.getStore()?.headers??{})};
    if(name==='@/app/chatgpt-auth')return {getChatGPTUser:async()=>{sitesReads++;return context.getStore()?.sites??null}};
    if(name==='@/lib/catalog')return catalog;
    if(name.startsWith('@/'))return load(name.slice(2)+'.ts');

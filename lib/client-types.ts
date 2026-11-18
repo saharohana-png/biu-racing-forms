@@ -18,6 +18,18 @@ export async function request<T>(url:string,options?:RequestInit):Promise<T> {
  const controller=options?.signal?null:new AbortController();
  const timeout=controller?setTimeout(()=>controller.abort(),options?.body instanceof FormData?120000:30000):null;
  try{
+  // Larger files go straight to private storage using a one-file signed URL.
+  // This keeps the existing 25 MiB limit without relying on server request-size limits.
+  if(options?.body instanceof FormData){
+   const form=options.body,file=form.get('file');
+   if(file instanceof File&&file.size>3*1024*1024){
+    const signed=await request<{url:string;ticket:string}>(url+'?stage=1',{method:'POST',body:JSON.stringify({fieldId:form.get('fieldId'),name:file.name,size:file.size,mime:file.type})});
+    const result=await fetch(signed.url,{method:'PUT',headers:{'content-type':file.type||'application/octet-stream'},body:file,signal:options.signal??controller?.signal});
+    if(!result.ok)throw new Error('הקובץ לא הועלה. יש לנסות שוב.');
+    const fields:Record<string,string>={ticket:signed.ticket};form.forEach((value,key)=>{if(typeof value==='string')fields[key]=value;});
+    options={...options,body:JSON.stringify(fields)};
+   }
+  }
   const headers=new Headers(options?.headers);
   if(!(options?.body instanceof FormData)&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');
   const response=await fetch(url,{...options,headers,signal:options?.signal??controller?.signal,cache:'no-store'});

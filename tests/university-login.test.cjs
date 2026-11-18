@@ -15,12 +15,12 @@ function harness(request,{search='',onSuccess}={}){
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return{promise,resolve,reject};};
 
-test('team entry has an email field and no ChatGPT, password or code step',()=>{
+test('team entry provides university email, private team code and separate owner login',()=>{
  const h=harness(async()=>{}),input=h.find('input');
  assert.equal(input.props.type,'email');assert.equal(input.props.dir,'ltr');assert.equal(input.props.autoComplete,'email');
  assert.equal(input.props.placeholder,'name@live.biu.ac.il');
- assert.equal(h.nodes().filter(node=>node.type==='input').length,1);
- assert.equal(h.nodes().filter(node=>node.type==='a').length,0);
+ assert.equal(h.nodes().filter(node=>node.type==='input').length,2);
+ assert.equal(h.nodes().filter(node=>node.type==='a').length,1);
  assert.equal(h.find('button').props.children,'כניסה');
 });
 test('invalid and lookalike domains never create a session',async()=>{
@@ -36,7 +36,7 @@ test('one active submission normalizes the email, blocks duplicate requests and 
  h.email('  Member@LIVE.BIU.AC.IL  ');
  const first=h.submit(),second=h.submit();h.render();
  assert.equal(requests.length,1);assert.equal(requests[0].url,'/api/auth/email-entry');
- assert.equal(requests[0].options.method,'POST');assert.deepEqual(JSON.parse(requests[0].options.body),{email:'member@live.biu.ac.il'});
+ assert.equal(requests[0].options.method,'POST');assert.deepEqual(JSON.parse(requests[0].options.body),{email:'member@live.biu.ac.il',accessCode:''});
  assert.equal(h.find('input').props.disabled,true);assert.equal(h.find('button').props.disabled,true);
  const session={authMethod:'email_entry',emailVerified:false,role:'contributor',subject:'entry_1',systemIds:['TSAL']};
  active.resolve(session);await Promise.all([first,second]);h.render();

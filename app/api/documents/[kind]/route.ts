@@ -6,6 +6,14 @@ import { translationConfig } from '@/lib/translation-runtime';
 
 export const dynamic = 'force-dynamic';
 type Context = { params: Promise<{ kind: string }> };
+function workbookStream(bytes: Uint8Array) {
+  let offset = 0;
+  return new ReadableStream<Uint8Array>({ pull(controller) {
+    if (offset >= bytes.length) { controller.close(); return; }
+    const end = Math.min(offset + 64 * 1024, bytes.length);
+    controller.enqueue(bytes.subarray(offset, end)); offset = end;
+  } });
+}
 function documentKind(value: string): OfficialWorkbookKind {
   if (value !== 'esf' && value !== 'ases' && value !== 'ses') throw new ApiError(404, 'המסמך לא נמצא.');
   return value;
@@ -31,7 +39,8 @@ export async function GET(request: Request, { params }: Context) {
     if (!['view', 'download', 'report'].includes(format)) throw new ApiError(400, 'פורמט המסמך אינו נתמך.');
     const { member, snapshots, translations, scope, config } = await authorizedDocumentSources();
     const workbook = await buildOfficialWorkbook({ kind, snapshots, translations });
-    if (format === 'download') return new Response(workbook.bytes.slice().buffer, { headers: {
+    // SES exceeds Vercel's buffered-response limit; stream the complete workbook.
+    if (format === 'download') return new Response(workbookStream(workbook.bytes), { headers: {
       'Content-Type': workbook.mime,
       'Content-Disposition': `attachment; filename="${workbook.filename}"`,
       'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',

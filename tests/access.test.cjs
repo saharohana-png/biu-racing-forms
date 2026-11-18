@@ -9,7 +9,7 @@ function load(file,deps){const exports={};const compiled=ts.transpileModule(fs.r
 const progress=load('lib/progress.ts',{});
 const sourceImport=load('lib/source-import.ts',{});
 const answerMerge=load('lib/answer-merge.ts',{});
-const server=load('lib/server.ts',{'cloudflare:workers':{env:{DB:database}},'@/app/chatgpt-auth':{getChatGPTUser:async()=>identity},'@/lib/catalog':catalog,'@/lib/progress':progress,'@/lib/source-import':sourceImport,'@/lib/answer-merge':answerMerge});
+const server=load('lib/server.ts',{'@/lib/team-entry':{teamEntryAllowed:()=>true},'@/lib/cloud-storage':{cloudDatabase:database},'@/app/chatgpt-auth':{getChatGPTUser:async()=>identity},'@/lib/catalog':catalog,'@/lib/progress':progress,'@/lib/source-import':sourceImport,'@/lib/answer-merge':answerMerge});
 function actor(role,scope=['TSAL'],active=1){identity={userId:'opaque-local-subject',email:'never-returned@example.invalid'};member=role?{subject:identity.userId,role,system_ids:JSON.stringify(scope),active}:null;}
 async function denied(fn,status){await assert.rejects(fn,e=>e.status===status);}
 (async()=>{

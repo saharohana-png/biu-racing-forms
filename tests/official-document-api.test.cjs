@@ -7,20 +7,20 @@ function fixture(t){
  const fields=[{id:'note',type:'text'}],catalog={schemaVersion:'test',systems:[{id:'TSAL'},{id:'BMS'}],getSystem:id=>['TSAL','BMS','COORDINATOR'].includes(id)?{id}:undefined,getFields:()=>fields};
  sql.prepare('INSERT INTO workspace VALUES(?,?,?)').run('2027','owner','2026-10-31');for(const [id,role,ids,active] of [['owner','coordinator',[],1],['writer','contributor',['TSAL'],1],['reviewer','reviewer',['TSAL'],1],['disabled','contributor',['TSAL'],0]])sql.prepare('INSERT INTO memberships(subject,role,system_ids,active,created_at) VALUES(?,?,?,?,?)').run(id,role,JSON.stringify(ids),active,'2026-10-31');
  for(const [id,revision]of [['TSAL',3],['BMS',4],['COORDINATOR',7]])sql.prepare('INSERT INTO submissions(id,revision,answers,updated_at) VALUES(?,?,?,?)').run(id,revision,JSON.stringify({note:{status:'answered',value:'מקור עברי '+id}}),'2026-10-31');
- let identity={userId:'owner',email:'fixture@example.invalid'},config={},translations={};const schedules=[],builds=[],reads=[];
+ let identity={userId:'owner',email:'fixture@example.invalid'},config={},translations={};const schedules=[],builds=[],reads=[];let workbookBytes=new TextEncoder().encode('official draft');
  const modules=new Map();function load(file){if(modules.has(file))return modules.get(file);const exports={};modules.set(file,exports);const require=name=>{
-  if(name==='cloudflare:workers')return {env:{DB:db}};
+  if(name==='@/lib/team-entry')return {teamEntryAllowed:()=>true};if(name==='@/lib/cloud-storage')return {cloudDatabase:db};
   if(name==='next/server')return {after(){throw Error('GET must not schedule translation')}};
   if(name==='@/lib/email-entry-session')return {readEmailEntryToken:async()=>null};
   if(name==='@/app/chatgpt-auth')return {getChatGPTUser:async()=>identity};
   if(name==='@/lib/catalog'||name==='./catalog')return catalog;
   if(name==='@/lib/translation-runtime')return {translationConfig:()=>config,scheduleTranslation:(_db,id,revision)=>schedules.push({id,revision})};
   if(name==='@/lib/translation')return {getTranslationSnapshot:async(_db,snapshot)=>{reads.push(snapshot.id);return {systemId:snapshot.id,sourceRevision:snapshot.revision,sourceHash:'hash',isCurrent:true,status:'queued',providerConfigured:!!config.apiKey,retryable:true,englishAnswers:{},fieldStates:{note:'pending'},completedFields:0,totalFields:1,updatedAt:null,...translations[snapshot.id]}}};
-  if(name==='@/lib/official-workbooks')return {buildOfficialWorkbook:async input=>{builds.push(input);return {bytes:new TextEncoder().encode('official draft'),mime:'application/test-workbook',filename:'working-draft.xlsx',report:{state:'working-draft'},sheets:[{name:'Main',state:'visible'}]}},getOfficialWorkbookSheet:async()=>({name:'Main',rows:[]})};
+  if(name==='@/lib/official-workbooks')return {buildOfficialWorkbook:async input=>{builds.push(input);return {bytes:workbookBytes,mime:'application/test-workbook',filename:'working-draft.xlsx',report:{state:'working-draft'},sheets:[{name:'Main',state:'visible'}]}},getOfficialWorkbookSheet:async()=>({name:'Main',rows:[]})};
   if(name.startsWith('@/'))return load(name.slice(2)+'.ts');if(name.startsWith('.'))return load(path.normalize(path.join(path.dirname(file),name+'.ts')));throw Error('Unexpected '+name);
- };const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports,require,console,Error,TypeError,Response,Request,Headers,URL,TransformStream,TextEncoder,TextDecoder,crypto:globalThis.crypto,Uint8Array,ArrayBuffer,Map,Set,AbortController,setTimeout,clearTimeout,fetch,File,FormData},{filename:file});return exports;}
+ };const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports,require,console,Error,TypeError,Response,Request,Headers,URL,TransformStream,ReadableStream,TextEncoder,TextDecoder,crypto:globalThis.crypto,Uint8Array,ArrayBuffer,Map,Set,AbortController,setTimeout,clearTimeout,fetch,File,FormData},{filename:file});return exports;}
  const route=load('app/api/documents/[kind]/route.ts'),params=kind=>({params:Promise.resolve({kind})});
- return {sql,db,schedules,builds,reads,route,params,actor(id){identity=id?{userId:id,email:'fixture@example.invalid'}:null},configure(value){config=value},states(value){translations=value},get(query='',kind='esf'){return route.GET(new Request('https://site.invalid/api/documents/'+kind+query),params(kind))},post(body={action:'process'},origin='https://site.invalid'){return route.POST(new Request('https://site.invalid/api/documents/esf',{method:'POST',headers:{...(origin?{origin}:{}),'content-type':'application/json'},body:JSON.stringify(body)}),params('esf'))}};
+ return {sql,db,schedules,builds,reads,route,params,workbook(bytes){workbookBytes=bytes},actor(id){identity=id?{userId:id,email:'fixture@example.invalid'}:null},configure(value){config=value},states(value){translations=value},get(query='',kind='esf'){return route.GET(new Request('https://site.invalid/api/documents/'+kind+query),params(kind))},post(body={action:'process'},origin='https://site.invalid'){return route.POST(new Request('https://site.invalid/api/documents/esf',{method:'POST',headers:{...(origin?{origin}:{}),'content-type':'application/json'},body:JSON.stringify(body)}),params('esf'))}};
 }
 test('document GET keeps existing access and coordinator boundaries and exposes no provider credentials',async t=>{
  const f=fixture(t);for(const who of [null,'outsider','disabled']){f.actor(who);assert.equal((await f.get()).status,who?403:401);assert.equal(f.builds.length,0);}f.actor('writer');f.configure({apiKey:'fixture-private-config',model:'fixture-model'});let response=await f.get();assert.equal(response.status,200);let data=await response.json();assert.deepEqual(data.scope.systemIds,['TSAL']);assert.equal(data.scope.complete,false);assert.equal(data.scope.includesCoordinator,false);assert.deepEqual(plain(f.builds.at(-1).snapshots.map(s=>s.id)),['TSAL']);assert.equal(JSON.stringify(data).includes('fixture-private-config'),false);assert.equal(response.headers.get('cache-control'),'private, no-store');f.actor('reviewer');response=await f.get();assert.equal((await response.json()).canProcess,false);f.actor('owner');data=await (await f.get()).json();assert.deepEqual(data.scope.systemIds,['TSAL','BMS','COORDINATOR']);assert.equal(data.scope.complete,true);
@@ -41,4 +41,13 @@ test('browser job listing excludes stale, unsaved and completed revisions',async
 
 test('local translation needs no provider configuration and document parameters stay bounded',async t=>{
  const f=fixture(t);f.actor('writer');const result=await f.post();assert.equal(result.status,202);assert.equal((await result.json()).engine,'browser-local');assert.equal(f.schedules.length,0);assert.equal((await f.get('','invalid')).status,404);assert.equal((await f.get('?format=invalid')).status,400);assert.equal((await f.get('?sheet=missing')).status,404);assert.equal((await f.post({action:'invalid'})).status,400);assert.equal((await f.post({action:'process',padding:'x'.repeat(1025)})).status,413);
+});
+
+ test('large official workbooks stream completely without a buffered content length',async t=>{
+ const f=fixture(t),bytes=new Uint8Array(5*1024*1024).fill(165);f.workbook(bytes);
+ const response=await f.get('?format=download','ses');assert.equal(response.status,200);
+ assert.equal(response.headers.has('content-length'),false);
+ const reader=response.body.getReader();let size=0,chunks=0;
+ for(;;){const {value,done}=await reader.read();if(done)break;size+=value.length;chunks++;assert.equal(value.every(n=>n===165),true);}
+ assert.equal(size,bytes.length);assert.ok(chunks>1);
 });

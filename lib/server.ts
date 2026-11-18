@@ -1,4 +1,5 @@
-import { env } from 'cloudflare:workers';
+import { cloudDatabase, cloudBucket } from '@/lib/cloud-storage';
+import {teamEntryAllowed} from '@/lib/team-entry';
 import { translationQueueStatement } from '@/lib/translation-version';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { readEmailEntryToken, emailEntryTokenFromCookie, emailEntryTokenHash, newEmailEntryToken, emailEntryCookie, EMAIL_ENTRY_MAX_AGE } from '@/lib/email-entry-session';
@@ -10,17 +11,21 @@ import { canonical, computeProgress, referencedAttachmentIds, fingerprint, isNot
 export const SCHEMA_VERSION=schemaVersion;
 export const MAX_FILE_BYTES=25*1024*1024;
 export const SYSTEM_QUOTA_BYTES=500*1024*1024;
-export const PROJECT_QUOTA_BYTES=2*1024*1024*1024;
+export const PROJECT_QUOTA_BYTES=950*1024*1024;
 export type Session={subject:string;role:'coordinator'|'reviewer'|'contributor';systemIds:string[];authMethod?:'sites'|'email_entry';emailVerified?:boolean};
 export class ApiError extends Error {constructor(public status:number,message:string,public details:Record<string,unknown>={}){super(message);}}
-export function database():D1Database {if(!env.DB) throw new ApiError(503,'אחסון התשובות עדיין אינו זמין. השינויים נשארים בטיוטה המקומית.');return env.DB;}
-export function bucket():R2Bucket {if(!env.BUCKET) throw new ApiError(503,'אחסון הקבצים עדיין אינו זמין.');return env.BUCKET;}
+export function database():D1Database {return cloudDatabase;}
+export function bucket():R2Bucket {return cloudBucket;}
 export function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});}
 export async function guard(request:Request,operation:()=>Promise<unknown|Response>):Promise<Response>{
   try {
     if(!['GET','HEAD','OPTIONS'].includes(request.method)){
       const origin=request.headers.get('origin');
-      if(!origin||origin!==new URL(request.url).origin) throw new ApiError(403,'הפעולה דורשת בקשה מאותו אתר.');
+      const expected=new URL(request.url),host=request.headers.get('host');
+      // Next may construct request.url using its internal listen hostname.
+      // Compare the browser's Origin with the actual HTTP Host, never a client-supplied forwarded host.
+      if(host)expected.host=host;
+      if(!origin||origin!==expected.origin) throw new ApiError(403,'הפעולה דורשת בקשה מאותו אתר.');
       if(Number(request.headers.get('content-length')??0)>MAX_FILE_BYTES+1024*1024) throw new ApiError(413,'הקובץ גדול מהמגבלה המותרת: 25 MiB.');
     }
     const result=await operation();return result instanceof Response?result:json(result);
@@ -66,6 +71,7 @@ function selfDeclaredSession(member:EmailEntryMember):Session{
 }
 export async function enterWithEmail(request:Request,body:Record<string,unknown>):Promise<Response>{
   if(!isUniversityEmail(body.email))throw new ApiError(400,'יש להזין כתובת מייל בסיומת @live.biu.ac.il.',{code:'UNIVERSITY_EMAIL_REQUIRED'});
+  if(!teamEntryAllowed(body.accessCode))throw new ApiError(403,'יש להזין את קוד הצוות שקיבלת מרכז התיעוד.',{code:'TEAM_CODE_REQUIRED'});
   const db=database();await requireConfiguredOwner(db);
   const currentToken=emailEntryTokenFromCookie(request.headers.get('cookie'));
   if(currentToken){const current=await emailEntryMember(db,currentToken);if(current)selfDeclaredSession(current);}
@@ -290,7 +296,7 @@ export async function uploadFile(id:string,form:FormData){
   if(existing)verifyExisting(existing);
   const head=await readSystem(id),activeIds=new Set((head.answers[fieldId]?.attachmentIds??[]).filter(value=>value!==replaces));
   if(activeIds.size+(existing&&activeIds.has(existing.id)?0:1)>40)throw new ApiError(413,'אפשר לקשר עד 40 קבצים לתשובה אחת. יש להסיר שיוך קיים או להחליף קובץ; הגרסאות הקודמות נשמרות.');
-  const quotaMessage='מכסת הקבצים התמלאה: עד 500 MiB למערכת ועד 2 GiB לפרויקט.';
+  const quotaMessage='מכסת הקבצים התמלאה: עד 500 MiB למערכת ועד 950 MiB לפרויקט.';
   if(!existing){
     const attachmentId=crypto.randomUUID(),storageKey=`files/${id}/${attachmentId}`,now=new Date().toISOString(),safeName=file.name.replace(/[\\/\u0000-\u001f\u007f]/g,'_').replace(/^\.+/,'').slice(0,180)||'attachment';
     await db.prepare("INSERT OR IGNORE INTO attachments(id,system_id,field_id,original_name,safe_name,mime,size,sha256,storage_key,state,replaces_id,version,actor,created_at,mutation_key) SELECT ?,?,?,?,?,?,?,?,?,'uploading',?,?,?,?,? WHERE COALESCE((SELECT SUM(size) FROM attachments WHERE system_id=? AND state IN ('complete','uploading')),0)+?<=? AND COALESCE((SELECT SUM(size) FROM attachments WHERE state IN ('complete','uploading')),0)+?<=?").bind(attachmentId,id,fieldId,file.name.slice(0,255),safeName,mime,file.size,digest,storageKey,replaces,(replaced?.version??0)+1,member.subject,now,key,id,file.size,SYSTEM_QUOTA_BYTES,file.size,PROJECT_QUOTA_BYTES).run();

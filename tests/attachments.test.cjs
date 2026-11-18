@@ -11,7 +11,7 @@ function load(file,deps){const exports={};const compiled=ts.transpileModule(fs.r
 const progress=load('lib/progress.ts',{});
 const sourceImport=load('lib/source-import.ts',{});
 const answerMerge=load('lib/answer-merge.ts',{});
-const server=load('lib/server.ts',{'cloudflare:workers':{env:{DB:database}},'@/app/chatgpt-auth':{getChatGPTUser:async()=>({userId:'opaque-test',email:'hidden@example.invalid'})},'@/lib/catalog':{schemaVersion:'test',systems:[{id:'TSAL'}],getSystem:id=>id==='TSAL'?{id}:undefined,getFields:()=>fields},'@/lib/progress':progress,'@/lib/source-import':sourceImport,'@/lib/answer-merge':answerMerge});
+const server=load('lib/server.ts',{'@/lib/team-entry':{teamEntryAllowed:()=>true},'@/lib/cloud-storage':{cloudDatabase:database},'@/app/chatgpt-auth':{getChatGPTUser:async()=>({userId:'opaque-test',email:'hidden@example.invalid'})},'@/lib/catalog':{schemaVersion:'test',systems:[{id:'TSAL'}],getSystem:id=>id==='TSAL'?{id}:undefined,getFields:()=>fields},'@/lib/progress':progress,'@/lib/source-import':sourceImport,'@/lib/answer-merge':answerMerge});
 (async()=>{
  const current=await server.readSystem('TSAL');assert.deepEqual(Array.from(current.attachments,a=>a.id).sort(),['replacement','table-evidence'],'Reload returns only currently referenced originals');
  assert.equal(current.progress.complete,2,'Linked table evidence still contributes to completion');

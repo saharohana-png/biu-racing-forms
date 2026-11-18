@@ -1,0 +1,16 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run templates:prepare && npm run build",
+  "installCommand": "npm ci --include=dev --include=optional --no-audit --no-fund",
+  "regions": [
+    "fra1"
+  ],
+  "functions": {
+    "app/api/**/route.ts": {
+      "maxDuration": 300
+    }
+  },
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
+}
