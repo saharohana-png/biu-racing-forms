@@ -24,6 +24,22 @@ check('add row retains unknown',()=>{nodes(render()).find(n=>n.type==='button'&&
 check('remove row retains unknown',()=>{nodes(render()).find(n=>n.type==='button'&&n.props.children==='הסרת רשומה').props.onClick();assert.equal(saved.status,'unknown');assert.equal(saved.value.length,0);assert.equal(saved.reason,original.reason)});
 check('only explicit answered button promotes status',()=>{nodes(render()).find(n=>n.type==='button'&&n.props.children==='יש תשובה').props.onClick();assert.equal(saved.status,'answered');assert.deepEqual(saved.value,original.value)});
 check('unknown text displays and edit stays unknown',()=>{const tree=render({field:{...field,kind:'text',columns:[]},answer:{...original,value:'Known text'}});assert.match(renderToStaticMarkup(tree),/Known text/);nodes(tree).find(n=>n.type==='textarea'&&n.props.value==='Known text').props.onChange({target:{value:'New text'}});assert.equal(saved.status,'unknown');assert.equal(saved.value,'New text')});
+check('unknown file keeps its saved source visible without enabling file changes',()=>{
+ const answer={...original,value:''};
+ const attachments=[{id:'kept-file',fieldId:'partial',safeName:'saved-source.pdf'},{id:'unlinked-file',fieldId:'partial',safeName:'unlinked.pdf'}];
+ for(const readOnly of [false,true]){
+  const tree=render({field:{...field,kind:'file',columns:[]},answer,attachments,readOnly});
+  const html=renderToStaticMarkup(tree);
+  assert.match(html,/href="\/api\/files\/kept-file"/);
+  assert.match(html,/saved-source\.pdf/);
+  assert.match(html,/חסר ערך מדוד/);
+  assert.doesNotMatch(html,/unlinked\.pdf/);
+  assert.ok(!nodes(tree).some(n=>n.type==='input'&&n.props.type==='file'));
+  assert.ok(!nodes(tree).some(n=>n.type==='button'&&n.props.children==='הסרה'));
+ }
+ assert.equal(answer.status,'unknown');
+ assert.deepEqual(answer.attachmentIds,['kept-file']);
+});
 check('unknown selection remains unknown including NA option',()=>{const tree=render({field:{...field,kind:'select',columns:[],options:[{value:'N/A',label:'N/A'}]},answer:{...original,value:''}});nodes(tree).find(n=>n.type==='select'&&n.props.id==='partial').props.onChange({target:{value:'N/A'}});assert.equal(saved.status,'unknown');assert.equal(saved.value,'N/A')});
 check('history/conflict preview shows unknown table and gap',()=>{const html=renderToStaticMarkup(React.createElement(AnswerPreview,{answers:{partial:original},fields:[field]}));assert.match(html,/Known component/);assert.match(html,/חסר ערך מדוד/);assert.match(html,/לא מולא/);assert.match(html,/kept-file/)});
 check('read-only viewer can see partial data without enabled edit controls',()=>{const tree=render({readOnly:true});assert.match(renderToStaticMarkup(tree),/Known component/);for(const n of nodes(tree)){if(n.type==='input'||n.type==='textarea')assert.equal(n.props.readOnly,true);if(n.type==='button'||n.type==='select')assert.equal(n.props.disabled,true)}});

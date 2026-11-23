@@ -57,7 +57,10 @@ export function computeProgress(fields:ProgressField[],answers:Answers,attachmen
     // Assess the same content and evidence requirements once. Source verification
     // affects formal completion, while filled tracks usable documentation.
     if(!reason)filled++;
-    if(answer?.sourceReview==='pending')reason='תוכן מהמקורות — ממתין לאימות הצוות';
+    if(answer?.sourceReview==='pending') {
+      const sourceReason='תוכן מהמקורות: ממתין לאימות הצוות';
+      reason=reason?`${reason}; ${sourceReason}`:sourceReason;
+    }
     if(reason) missing.push({id:field.id,label:field.label,reason});
   }
   const total=unique.length,complete=total-missing.length;
