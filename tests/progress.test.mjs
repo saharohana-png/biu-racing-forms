@@ -37,15 +37,25 @@ assert.deepEqual(
   {filled:pendingText.filled,fillPercent:pendingText.fillPercent,complete:pendingText.complete,percent:pendingText.percent,sourcePending:pendingText.sourcePending,sourceConfirmed:pendingText.sourceConfirmed},
   {filled:1,fillPercent:100,complete:0,percent:0,sourcePending:1,sourceConfirmed:0},
   'Complete pending source text is filled, but not formally complete');
-assert.deepEqual(pendingText.missing,[{id:'voltage',label:'מתח',reason:'תוכן מהמקורות — ממתין לאימות הצוות'}],'Existing pending missing reason is preserved');
+assert.deepEqual(pendingText.missing,[{id:'voltage',label:'מתח',reason:'תוכן מהמקורות: ממתין לאימות הצוות'}],'Existing pending missing reason is preserved');
 const partialUnknown={...pending,status:'unknown',reason:'חסר המתח המרבי'};
-assert.equal(computeProgress(textField,{voltage:partialUnknown}).filled,0,'Partial unknown text is not filled');
+const unknownPending=computeProgress(textField,{voltage:partialUnknown});
+assert.deepEqual(
+  [unknownPending.filled,unknownPending.complete,unknownPending.missing[0].reason],
+  [0,0,'טרם נקבע: חסר המתח המרבי; תוכן מהמקורות: ממתין לאימות הצוות'],
+  'An unanswered design requirement and pending source verification remain visible together');
 assert.equal(computeProgress(textField,{voltage:{...pending,value:''}}).filled,0,'Provenance without an answer is not filled');
 const pendingFile={...answers.evidence,provenance,sourceReview:'pending'};
-assert.equal(computeProgress(fileField,{evidence:pendingFile}).filled,0,'Missing file bytes do not count as filled');
+const missingFile=computeProgress(fileField,{evidence:pendingFile});
+assert.deepEqual(
+  [missingFile.filled,missingFile.complete,missingFile.missing[0].reason],
+  [0,0,'חסר קובץ שהעלאתו הושלמה; תוכן מהמקורות: ממתין לאימות הצוות'],
+  'Pending source verification does not conceal a required missing upload');
 assert.equal(computeProgress(fileField,{evidence:pendingFile},[{...file,state:'uploading'}]).filled,0,'Uploading evidence is not filled');
 const uploaded=computeProgress(fileField,{evidence:pendingFile},[file]);
 assert.deepEqual([uploaded.filled,uploaded.complete,uploaded.fillPercent,uploaded.percent],[1,0,100,0],'Completed pending original counts as filled only');
+const openFile=computeProgress(fileField,{evidence:{...pendingFile,status:'unknown',reason:'חסר אישור הגרסה'}},[file]);
+assert.deepEqual([openFile.filled,openFile.complete],[0,0],'A saved source attached to an unknown file field does not complete it');
 const pendingTable={...tableAnswer,provenance,sourceReview:'pending'};
 const tableFile={id:'test-file',fieldId:'tests',state:'complete'};
 assert.equal(computeProgress(table,{tests:{...pendingTable,value:[{_id:'row-1',result:'',proof:'test-file'}]}},[tableFile]).filled,0,'Pending table with a required blank cell is not filled');
@@ -54,12 +64,13 @@ assert.deepEqual(
   [1,0],'Complete pending table and evidence count as filled only');
 const pendingChanges={fields:{voltage:{fingerprint:fingerprint(pending),verdict:'changes_requested',reason:'יש לתקן',role:'reviewer',at:'2026-10-30'}}};
 const needsChange=computeProgress(textField,{voltage:pending},[],pendingChanges);
-assert.deepEqual([needsChange.filled,needsChange.complete,needsChange.missing[0].reason],[0,0,'תוכן מהמקורות — ממתין לאימות הצוות'],'Changes requested block filled without changing pending formal reason precedence');
+assert.deepEqual([needsChange.filled,needsChange.complete,needsChange.missing[0].reason],[0,0,'נדרש תיקון: יש לתקן; תוכן מהמקורות: ממתין לאימות הצוות'],'Pending source verification does not conceal an engineering change request');
 const confirmed={...pending,sourceReview:'confirmed'};
 const confirmedProgress=computeProgress(textField,{voltage:confirmed});
 assert.deepEqual([confirmedProgress.filled,confirmedProgress.complete,confirmedProgress.sourceConfirmed,confirmedProgress.sourcePending],[1,1,1,0],'Source confirmation keeps fill and increases formal completion');
 const confirmedUnknown=computeProgress(textField,{voltage:{...partialUnknown,sourceReview:'confirmed'}});
 assert.deepEqual([confirmedUnknown.filled,confirmedUnknown.complete,confirmedUnknown.sourceConfirmed],[0,0,1],'Confirmed source may still contain unknown content; confirmation is a separate count');
+assert.equal(confirmedUnknown.missing[0].reason,'טרם נקבע: חסר המתח המרבי','Confirming the source removes only its pending message, not the unanswered requirement');
 assert.equal(computeProgress(textField,{voltage:{...na,provenance,sourceReview:'pending'}}).filled,0,'Pending N/A still needs current engineering review to count as filled');
 assert.equal(computeProgress([...many,...many],almost).fillPercent,99,'Fill percentage deduplicates fields and never rounds a gap to100');
 assert.deepEqual(
@@ -68,4 +79,4 @@ assert.deepEqual(
 const before=structuredClone({pending,tableAnswer,provenance});
 computeProgress(textField,{voltage:pending});computeProgress(table,{tests:{...tableAnswer,provenance,sourceReview:'pending'}},[tableFile]);
 assert.deepEqual({pending,tableAnswer,provenance},before,'Progress does not mutate answers, rows or provenance');
-console.log('32 progress acceptance cases passed.');
+console.log('Progress acceptance cases passed.');
